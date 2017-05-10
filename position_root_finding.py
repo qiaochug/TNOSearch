@@ -74,7 +74,11 @@ def f_evaluate(f):
     
     RHS = 2*tan_outer - numerator/denominator
     
-    LHS = 2*pi*t/tau
+    if t%tau < tau/ 2:
+        LHS = 2*pi*(t%tau)/tau
+    
+    else:
+        LHS = 2*pi*(t%tau)/tau - 2*pi
     
     result = RHS - LHS
     
@@ -87,8 +91,28 @@ def f_calc():
     Para: t (current time in days)
     Return: f (asteroid angular position in rad)
     """
+#    if t%tau > tau/2:
+#        #print("here")
+#        root = scipy.optimize.newton(f_evaluate, 3/2*pi)
+#    
+#    if t%tau <= tau/2:
+        #print("there")
+    p = np.zeros(10)
+    count = 0
+    for num in np.linspace(0, 2*pi,10):
+        try:
+            root = scipy.optimize.newton(f_evaluate, num)
+            p[count] = root
+            count = count + 1
+        except RuntimeError:
+            pass
+        
+    #print(p)
     
-    root = scipy.optimize.fsolve(f_evaluate, 0)
+    for num in np.arange(0,10):
+        if p[num] >= 0 and p[num] <= 2*pi:
+            root = p[num]
+            
     
     #print(root)
     
@@ -170,8 +194,11 @@ def generate(startDay, endDay):
     
     days = np.arange(startDay, endDay+1)
     
-    #largest = 0
-    #largest_day = 0
+    largest = 0
+    largest_day = 0
+    negative = False
+    f_large = False
+    f_negative = False
     
     for day in days:
         t = day
@@ -180,17 +207,24 @@ def generate(startDay, endDay):
         xyz = xyz_calc(f, day)
         #print("x {:f} y {:f} z {:f}".format(xyz[0], xyz[1], xyz[2]))
         lb = lambda_beta_calc(xyz)
-        #if lb[0] < 0:
-            #lb[0] = lb[0] + 2*pi
-        #print("day {:d} f {:f} lambda {:f} Beta {:f}".format(day, f[0],lb[0]/2/pi*360, lb[1]/2/pi*360))
-#        if lb[1]> largest:
+#        if lb[0] < 0:
+#            lb[0] = lb[0] + 2*pi
+        #print("day {:d} f {:f} lambda {:f} Beta {:f}".format(day, f,lb[0]/2/pi*360, lb[1]/2/pi*360))
+#        if lb[1]< largest:
 #            largest = lb[1]
 #            largest_day = day
+#        if lb[1] < 0:
+#            negative = True
+#        if f < 0:
+#            f_negative = True
+#        if f > 4:
+#            if f < 7:
+#                f_large = True
             
-    #print(largest_day, largest)  
+    #print(largest_day, largest, negative, f_large, f_negative)  
     return
  
-generate(0,365)       
+generate(0,365*252)       
 #f_fill()   
 #print(f_calc(0.6,1))
 #xyz = xyz_calc(2,30)
