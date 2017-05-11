@@ -14,7 +14,7 @@ variables
 """
 a = 40 # semi-axis AU
 e = 0 # eccentricity
-i = 0.8 # inclination
+i = 0 # inclination
 Omega = 0 # longitude of the ascending node
 omega = 0 #argument of perihelion
 
@@ -155,6 +155,7 @@ def xyz_calc(f,t):
     #print("lambda_e {:f}".format(Lambda_e))
     
     xyz[0] = u*math.cos(Omega + alpha) - R* math.cos(Lambda_e)
+    #print("u {:f} cos(Lambda_e) {:f} cos(Omega + alpha) {:f}".format(u,math.cos(Lambda_e), math.cos(Omega + alpha)))
     
     xyz[1] = u*math.sin(Omega + alpha) - R* math.sin(Lambda_e)
     
@@ -194,11 +195,11 @@ def generate(startDay, endDay):
     
     days = np.arange(startDay, endDay+1)
     
-    largest = 0
-    largest_day = 0
-    negative = False
-    f_large = False
-    f_negative = False
+#    largest = 0
+#    largest_day = 0
+#    negative = False
+#    f_large = False
+#    f_negative = False
     
     for day in days:
         t = day
@@ -209,7 +210,7 @@ def generate(startDay, endDay):
         lb = lambda_beta_calc(xyz)
 #        if lb[0] < 0:
 #            lb[0] = lb[0] + 2*pi
-        #print("day {:d} f {:f} lambda {:f} Beta {:f}".format(day, f,lb[0]/2/pi*360, lb[1]/2/pi*360))
+        print("day {:d} f {:f} lambda {:f} Beta {:f}".format(day, f,lb[0]/2/pi*360, lb[1]/2/pi*360))
 #        if lb[1]< largest:
 #            largest = lb[1]
 #            largest_day = day
@@ -224,7 +225,7 @@ def generate(startDay, endDay):
     #print(largest_day, largest, negative, f_large, f_negative)  
     return
  
-generate(0,365*252)       
+generate(0,365)       
 #f_fill()   
 #print(f_calc(0.6,1))
 #xyz = xyz_calc(2,30)
