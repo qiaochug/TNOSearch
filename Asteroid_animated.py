@@ -15,11 +15,11 @@ from matplotlib import animation
 """
 variables
 """
-a = 1 # semi-axis AU
-e = 0 # eccentricity
-i = 0.2 # inclination
-Omega = 0 # longitude of the ascending node
-omega = 0 #argument of perihelion
+a = 40 # semi-axis AU
+e = 0.4 # eccentricity
+i = 0.4 # inclination
+Omega = np.pi/2 # longitude of the ascending node
+omega = np.pi/2 #argument of perihelion
 
 """
 Constants
@@ -146,19 +146,19 @@ def xyz_calc(f,t):
     global alpha
     global Lambda_e
     
-    phi = omega + f
+    phi = (omega + f)%(2*pi)
     
     r = a*(1-e**2)/(1+e*math.cos(f))
     #print("r {:f}".format(r))
       
-    u = r*math.sqrt((math.sin(phi))**2*(math.cos(i))**2+(math.cos(phi))**2)
+    u = r*math.sqrt(((math.sin(phi))**2)*((math.cos(i))**2)+(math.cos(phi))**2)
     #print("u {:f}".format(u))
     
     alpha = math.atan(math.tan(phi)*math.cos(i))
     #print("alpha {:f}".format(alpha))
     
     Lambda_e = Lambda_e_calc(t)
-    #print("lambda_e {:f}".format(Lambda_e))
+    #print("t {:d} lambda_e {:f}".format(t,Lambda_e))
     
     xyz[0] = u*math.cos(Omega + alpha) - R* math.cos(Lambda_e)
     #print("u {:f} cos(Lambda_e) {:f} cos(Omega + alpha) {:f}".format(u,math.cos(Lambda_e), math.cos(Omega + alpha)))
@@ -210,14 +210,14 @@ def generate(startDay, endDay):
     for day in days:
         t = day
         f = f_calc()
-        print("f {:f} day {:f}".format(f,day/365.25*2*pi))
+        #print("f {:f} day {:f}".format(f,day/365.25*2*pi))
         #print("day {:f} tau {:f}".format(day, tau))
         xyz = xyz_calc(f, day)
-        #print("x {:f} y {:f} z {:f}".format(xyz[0], xyz[1], xyz[2]))
+        print("day {:d} x {:f} y {:f} z {:f}".format(day, xyz[0], xyz[1], xyz[2]))
         lb = lambda_beta_calc(xyz)
 #        if lb[0] < 0:
 #            lb[0] = lb[0] + 2*pi
-        #print("day {:d} f {:f} lambda {:f} Beta {:f}".format(day, f,lb[0]/2/pi*360, lb[1]/2/pi*360))
+        print("day {:d} f {:f} lambda {:f} Beta {:f}".format(day, f,lb[0]/2/pi*360, lb[1]/2/pi*360))
         if lb[1]< largest:
             largest = lb[1]
             largest_day = day
@@ -280,50 +280,53 @@ def generate(startDay, endDay):
 #                                       fargs= (x_steps,y_steps,my_line,my_point))
 
 
-#plt.close('all')
-#bound = 50
-#fig = plt.figure()
-#ax = plt.axes(xlim=(-bound,bound), ylim=(-bound, bound))
-#
-#(my_line,) = ax.plot([],[],lw = 2)
-#(my_point,) = ax.plot([],[],'ro',ms = 3)
-#
-#period_calc(a)
-#
-#days = np.arange(0,365)
-#
-#x_steps = np.zeros(366)
-#y_steps = np.zeros(366)
-#
-#count  = 0
-#for day in days:
-#        t = day
-#        f = f_calc()
-#        #print("day {:f} tau {:f}".format(day, tau))
-#        xyz = xyz_calc(f, day)
-#        #print("x {:f} y {:f} z {:f}".format(xyz[0], xyz[1], xyz[2]))
-#        x = xyz[0]
-#        y = xyz[1]
-#        z = xyz[2]
-#        lb = lambda_beta_calc(xyz)
+plt.close('all')
+bound = 50
+fig = plt.figure()
+ax = plt.axes(xlim=(-1,5), ylim=(20,30))
+
+(my_line,) = ax.plot([],[],lw = 2)
+(my_point,) = ax.plot([],[],'ro',ms = 3)
+
+period_calc(a)
+
+days = np.arange(0,1000)
+
+x_steps = np.zeros(1001)
+y_steps = np.zeros(1001)
+
+count  = 0
+for day in days:
+        t = day
+        f = f_calc()
+        #print("day {:f} tau {:f}".format(day, tau))
+        xyz = xyz_calc(f, day)
+        #print("x {:f} y {:f} z {:f}".format(xyz[0], xyz[1], xyz[2]))
+        x = xyz[0]
+        y = xyz[1]
+        z = xyz[2]
+        #lb = lambda_beta_calc(xyz)
 #        x_steps[count] = math.sin(lb[0])* (math.sqrt(x**2+y**2))*20
 #        y_steps[count] = math.sin(lb[1])* (math.sqrt(x**2+y**2+z**2))*20
-#        #x_steps[count] = count
-#        #y_steps[count] = count
-#        count = count + 1
-#
-#print(x_steps)
-#print(y_steps)
-#
-#def get_step(n,x,y,this_line,this_point):
-#    this_line.set_data(x[:n+1], y[:n+1])
-#    this_point.set_data(x[n], y[n])
-#
-#
-#my_movie = animation.FuncAnimation(fig,get_step, frames=351,\
-#                                   fargs= (x_steps,y_steps,my_line,my_point))
+        x_steps[count] = y
+        y_steps[count] = x
+        #x_steps[count] = count
+        #y_steps[count] = count
+        count = count + 1
 
-generate(0,365)
+print(x_steps)
+print(y_steps)
+
+def get_step(n,x,y,this_line,this_point):
+    this_line.set_data(x[:n+1], y[:n+1])
+    this_point.set_data(x[n], y[n])
+
+
+my_movie = animation.FuncAnimation(fig,get_step, frames=1001,\
+                                   fargs= (x_steps,y_steps,my_line,my_point))
+my_movie.save('Observe from north pole, facing righthand, x = y, y = x,e = 0.4,i=0.4.mp4',fps = 30)
+
+#generate(0,365)
 #f_fill()   
 #print(f_calc(0.6,1))
 #xyz = xyz_calc(2,30)
