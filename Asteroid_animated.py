@@ -21,6 +21,8 @@ i = 0.4 # inclination
 Omega = 0 # longitude of the ascending node
 omega = 0 #argument of perihelion
 
+start_f = 0 # the starting offset for asteroid
+
 """
 Constant
 """
@@ -121,6 +123,8 @@ def f_calc():
             root = p[num]
             
     #print("t {:d} root {:f} p {}".format(t, root,p))
+    
+    root = (root + start_f)%(2*pi)
     
     return (root)
 
@@ -317,7 +321,6 @@ def animate(startDay, endDay):
 
 
 plt.close('all')
-bound = 50
 fig = plt.figure()
 ax = plt.axes(xlim=(0,5), ylim=(-3,3))
 
@@ -362,7 +365,7 @@ def get_step(n,x,y,this_line,this_point):
 
 my_movie = animation.FuncAnimation(fig,get_step, frames=999,\
                                    fargs= (x_steps,y_steps,my_line,my_point))
-my_movie.save('newphiAtane0.4omega0.mp4',fps = 30)
+#my_movie.save('newphiAtane0.4omega0.mp4',fps = 30)
 
 #generate(0,365)
 #f_fill()   
