@@ -44,36 +44,33 @@ def startObsDis(sNite,sRa,sDec,eNite,eRa,eDec):
     #The diff array shows a bowl shape, truncated below 0,
     #First we find the point from which our d range should radiate from
     radP = -1
-    #find the index of first zero walking from 0 to 19
+    # first step: find the smallest value in the array
+    Index = 1
+    minv = diffs[0]
+    while Index < steps:
+        if diffs[Index] < minv:
+            minv = diffs[Index]
+        Index = Index + 1
+    #find the index of first minv walking from 0 to 19
     Index = 0
     firstZInd = -1
     while Index < steps:
-        if diffs[Index] == 0:
+        if diffs[Index] == minv:
             firstZInd = Index
             break
         Index = Index + 1
-    #find the index of last zero
+    #find the index of last minv
     Index = steps - 1
     lastZInd = -1
     while Index > -1:
-        if diffs[Index] == 0:
+        if diffs[Index] == minv:
             lastZInd = Index
             break
         Index = Index - 1
-    # if both of the first and last index of zeros are -1 there is no
-    # zeros in the array, if they are equal but not -1, it is 
-    # the unique 0
+    # if both of the first and last index of minv are same there is one
+    # minv in the array, if they are not equal but not -1, there are at least two
     if firstZInd == lastZInd:
-        if firstZInd != -1:
-            radP = firstZInd
-        else:
-            Index = 0
-            radP = 0
-            while Index < steps:
-                if diffs[Index] < diffs[radP]:
-                    radP = Index
-                Index = Index + 1
-    # If there are multiple zeros, take the mid point as radiation origin
+        radP = firstZInd
     else:
         radP = round((firstZInd + lastZInd)/2)
     # take 5 values around the radiation points as range of d
