@@ -9,7 +9,7 @@ Created on Fri May 26 13:39:09 2017
 import numpy as np
 import matplotlib.pyplot as plt
 import conversionsNoAst as cnv
-from math import radians, degrees, atan2, asin, sin, cos, pi,sqrt
+from math import radians, degrees, atan2, asin, sin, cos, pi,sqrt,pi,acos
 from vectorCalc import predict,maxVel,maxDegPerDay
 diffs = 1
 def startObsDis(sNite,sRa,sDec,eNite,eRa,eDec):
@@ -19,8 +19,8 @@ def startObsDis(sNite,sRa,sDec,eNite,eRa,eDec):
     """
     global diffs
     #divided the 20-600 AU into steps of distance
-    steps = 20
-    ds = np.linspace(20,600,steps)
+    steps = 40
+    ds = np.linspace(1,600,steps)
     diffs = np.zeros(steps)
     Index = 0
     for d in ds:
@@ -75,41 +75,118 @@ def startObsDis(sNite,sRa,sDec,eNite,eRa,eDec):
         radP = round((firstZInd + lastZInd)/2)
     # take 5 values around the radiation points as range of d
     # consider the edge cases where the radP is smaller than 2 or larger than steps - 2
-    range = ([ds[max(0,radP-2)],ds[min(radP+2, steps -1)]])      
-    return range
+    ranged = ([ds[max(0,radP-1)],ds[min(radP+1, steps -1)]])      
+    return ranged
     
 def startObsPoint(sObsDis, sNite, sRa,sDec):
     """
     Para: start observation, and suspected distance(one)
     Return: A point in heliocentric coordinates
     """
+    (betaS, gammaS) = cnv.equatorialToEcliptic(sRa, sDec, sNite)
+    lambdaE = ((sNite - 56192.447049) / 365.25 * 360) % (360)
+    lam = (lambdaE + gammaS) % (360)
+    lam = radians(lam)
+    betaS = radians(betaS)
+    lambdaE = radians(lambdaE)
+    #projected distance
+    pd = sObsDis * cos(betaS)
+    #X Y Z in geocentric coordinates
+    Xe = pd * cos(lam)
+    Ye = pd * sin(lam)
+    Ze = sObsDis * sin(betaS)
+    Xs = Xe + cos(lambdaE)
+    Ys = Ye + sin(lambdaE)
+    return ([Xs,Ys,Ze])
     
 def endObsPoint(startP, eNite,eRa,eDec):
     """
     Para: start point in heliocentric coordinates, end observation
     Return: A point in heliocentric coordinates
     """
+    sX = startP[0]
+    sY = startP[1]
+    sZ = startP[2]
+    #position of the earth in heliocentric coordinates
+    lambdaE = ((eNite - 56192.447049) / 365.25 * 360) % (360)
+    lambdaE = radians(lambdaE)
+    Ex = cos(lambdaE)
+    Ey = sin(lambdaE)
+    d_hypo = sqrt((sX-Ex)**2+(sY-Ey)**2+(sZ)**2)
+    
+    #end night lambda and beta
+    (betaE, gammaE) = cnv.equatorialToEcliptic(eRa, eDec, eNite)
+    betaE = radians(betaE)
+    gammaE = radians(gammaE)
+    lam = (lambdaE + gammaE) % (2*pi)
+    #projected distance
+    pd = d_hypo * cos(betaE)
+    # X Y Z in geocentric coordinates
+    Xe = pd * cos(lam)
+    Ye = pd * sin(lam)
+    Ze = d_hypo * sin(betaE)
+    # XYZ in heliocentric coordinates
+    Xs = Xe + cos(lambdaE)
+    Ys = Ye + sin(lambdaE)
+    return ([Xs,Ys,Ze])
     
 def iFinding(startP, endP):
     """
     Para: start point and end point in heliocentric coordinates
     Return: A possible i
     """
+    xs = startP[0]
+    ys = startP[1]
+    zs = startP[2]
+    
+    xe = endP[0]
+    ye = endP[1]
+    ze = endP[2]
+    
+    # the normal vector(Vs X Ve), order matters
+    xn = ys*ze-zs*ye
+    yn = zs*xe-xs*ze
+    zn = xs*ye-ys*xe
+    
+    # unit vector normal to the ecliptic plane
+    xu = 0
+    yu = 0
+    zu = 1
+    
+    # dot product of two normal vectors
+    dotProd = xn*xu + yn*yu + zn*zu
+    #||x||
+    lenOfn1 = sqrt((xn)**2+(yn)**2+(zn)**2)
+    lenOfn2 = sqrt((xu)**2+(yu)**2+(zu)**2)
+    inc = acos(dotProd/(lenOfn1 * lenOfn2))
+    return degrees(inc)
 
+snite = 57277.063257
+enite = 57278.026645
+sra =  -50.5936171
+era = -50.6109729
+sdec = -46.843937
+edec = -46.8387915
 count = 0
+numd = 20
 i = np.array([180,0]) #i[0] is the minimum of i and i[1] is the maximum of i 
-dRange = startObsDis(sNite=57048.068,sRa=85.621,sDec=11.499,eNite=57058.173,\
-                     eRa=85.606,eDec=11.5013)
-print(dRange)
-#for d in dRange:
-#    sP = startObsPoint(d,...)
-#    eP = endObsPoint(sP)
-#    iTemp = iFinding(sP, eP)
+([mind,maxd]) = startObsDis(sNite=snite,sRa=sra,sDec=sdec,eNite=enite,\
+                     eRa=era,eDec=edec)
+dRange = np.linspace(mind,maxd,numd)
+#print(dRange)
+for d in dRange:
+    sP = startObsPoint(sObsDis = d, sNite = snite, sRa = sra, sDec = sdec)
+    #print("start Position: ",sP)
+    eP = endObsPoint(startP = sP,eNite = enite,eRa = era,eDec = edec)
+    #print("end Position: ", eP)
+    iTemp = iFinding(startP = sP, endP = eP)
 #    #print("d: ", d, "i: ", iTemp)
-#    if iTemp < i[0]:
-#        i[0] = iTemp
-#    if iTemp > i[1]:
-#        i[1] = iTemp
+    if iTemp < i[0]:
+        i[0] = iTemp
+    if iTemp > i[1]:
+        i[1] = iTemp
+    print(iTemp)
+print(i)
     
       
 
