@@ -1,0 +1,124 @@
+<!-- This, is a comment that does not affect any of the code we write. We can use this to leave notes in the code for our future selves, or for others reading our code. This is also the most basic HTML document you can create. -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Code Weekend Sample Page</title>
+  </head>
+    <body>
+    <p>This is a basic HTML webpage.
+    <img src = "testImg.png", style = "width:304px;height:228px;">
+    <input type="file" id = "fileUpload">
+    <button onclick="Upload()">Upload</button>
+    <button onclick="Display()">Display Next</button>
+    <table id = "dvCSV">
+
+    <table id="datatable">
+        <tr>
+            <th>Column 1</th>
+            <th>Column "cool" 2</th>
+            <th>Column 3</th>
+        </tr>
+        <tr>
+            <td>100,111</td>
+            <td>200</td>
+            <td>300</td>
+        </tr>
+        <tr>
+            <td>400</td>
+            <td>500</td>
+            <td>600</td>
+        </tr>
+        <tr>
+            <td>Text</td>
+            <td>More text</td>
+            <td>Text with
+                new line</td>
+        </tr>
+    </table>
+
+
+    <a download="testDownload.csv" href="#" onclick="return ExcellentExport.csv(this, 'tableResult');">Export to CSV</a>
+    <script type="text/javascript">
+     var rowNum = 0;
+     var table = document.createElement("table");
+     table.id = "tableResult";
+     var imgd1 = document.createElement("img");
+     var imgs1 = document.createElement("img");
+     var imgt1 = document.createElement("img");
+     var imgd2 = document.createElement("img");
+     var imgs2 = document.createElement("img");
+     var imgt2 = document.createElement("img");
+     var imgd3 = document.createElement("img");
+     var imgs3 = document.createElement("img");
+     var imgt3 = document.createElement("img");
+     var space1 = document.createElement("br");
+     var space2 = document.createElement("br");
+    function Upload() {
+        var fileUpload = document.getElementById("fileUpload");
+        var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.txt)$/;
+        if (regex.test(fileUpload.value.toLowerCase())) {
+            if (typeof (FileReader) != "undefined") {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var rows = e.target.result.split("\n");
+                    for (var i = 0; i < rows.length; i++) {
+                        var row = table.insertRow(-1);
+                        var cells = rows[i].split(",");
+                        for (var j = 0; j < cells.length; j++) {
+                           var cell = row.insertCell(-1);
+                           cell.innerHTML = cells[j];
+                        }
+                    }
+                    var dvCSV = document.getElementById("dvCSV");
+                    dvCSV.innerHTML = "";
+                    dvCSV.appendChild(table);
+                    
+                    }
+                    reader.readAsText(fileUpload.files[0]);
+                } else {
+                    alert("This browser does not support HTML5.");
+                }
+            } else {
+                alert("Please upload a valid CSV file.");
+            }
+        }
+
+        function Display(){
+            if (rowNum >= table.rows.length){
+                alert("Reached the end of the table");
+            }
+            var first = table.rows[rowNum].cells.item(0).innerHTML;
+            var second = table.rows[rowNum].cells.item(1).innerHTML;
+            var third = table.rows[rowNum].cells.item(2).innerHTML;
+            rowNum = rowNum + 1;
+            imgd1.width = 100; imgs1.width = 100; imgt1.width = 100;
+            imgd1.height = 100; imgs1.height = 100; imgt1.height = 100;
+            imgd2.width = 100; imgs2.width = 100; imgt2.width = 100;
+            imgd2.height = 100; imgs2.height = 100; imgt2.height = 100;
+            imgd3.width = 100; imgs3.width = 100; imgt3.width = 100;
+            imgd3.height = 100; imgs3.height = 100; imgt3.height = 100;
+            imgd1.src = "diff" +  first + ".gif";
+            imgs1.src = "srch" + first + ".gif";
+            imgt1.src = "temp" + first + ".gif";
+            imgd2.src = "diff" +  second + ".gif";
+            imgs2.src = "srch" + second + ".gif";
+            imgt2.src = "temp" + second + ".gif";
+            imgd3.src = "diff" +  third + ".gif";
+            imgs3.src = "srch" + third + ".gif";
+            imgt3.src = "temp" + third + ".gif";
+            document.body.appendChild(imgd1);
+            document.body.appendChild(imgs1);
+            document.body.appendChild(imgt1);
+            document.body.appendChild(space1);
+            document.body.appendChild(imgd2);
+            document.body.appendChild(imgs2);
+            document.body.appendChild(imgt2);
+            document.body.appendChild(space2);
+            document.body.appendChild(imgd3);
+            document.body.appendChild(imgs3);
+            document.body.appendChild(imgt3);
+        }
+</script>
+    <script src="excellentexport.js"></script>
+  </body>
+</html>
