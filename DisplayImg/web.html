@@ -2,44 +2,34 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Code Weekend Sample Page</title>
+    <title>Triplet Visual Evaluation</title>
   </head>
     <body>
-    <p>This is a basic HTML webpage.
-    <img src = "testImg.png", style = "width:304px;height:228px;">
+    <p>Instruction:</p>
+    <p> 1. Upload a cvs file, each row containing three
+    IDs of the three object in a triplet 
+    <br>2. For each display, if the triplet is
+    shown to be problematic, mark as noise(if not marked, the triplet
+    would be marked as good)
+    <br> 3. Click through all triplets in the csv file
+    by clicking "Display Next" 
+    <br> 4. When the webpage alert that you have reached the end of the cvs file, save the result of evluation by clicking "Export Result to CSV", the CSV file would have in every row three IDs and a forth column of 1 or 0, with 1 meaning good and 0 meaning noise. The forth column shows 1 if the triplet has been evaluated in the web app, 0 otherwise. The last column is for keeping track of progress in case user need to exit before finishing all the evaluation.
+    <br> 5. You could upload multiple csv files and export result in one csv after finishing evaluation of all of them
+    </p >
     <input type="file" id = "fileUpload">
     <button onclick="Upload()">Upload</button>
     <button onclick="Display()">Display Next</button>
-    <table id = "dvCSV">
+    <table id = "dvCSV", style="display: none">
 
-    <table id="datatable">
-        <tr>
-            <th>Column 1</th>
-            <th>Column "cool" 2</th>
-            <th>Column 3</th>
-        </tr>
-        <tr>
-            <td>100,111</td>
-            <td>200</td>
-            <td>300</td>
-        </tr>
-        <tr>
-            <td>400</td>
-            <td>500</td>
-            <td>600</td>
-        </tr>
-        <tr>
-            <td>Text</td>
-            <td>More text</td>
-            <td>Text with
-                new line</td>
-        </tr>
-    </table>
-
-
-    <a download="testDownload.csv" href="#" onclick="return ExcellentExport.csv(this, 'tableResult');">Export to CSV</a>
+    <a download="testDownload.csv" href="#" onclick="return ExcellentExport.csv(this, 'tableResult');">Export Result to CSV</a>
+    <br>
+    <br>
+    <button onclick = "ToggleEvaluation(), UpdateEvaluation()", id = "toggle">Toggle Evaluation</button>
+    <div id = "Mark", style = "color: #1DA0E0">Marked as Good</div>
     <script type="text/javascript">
-     var rowNum = 0;
+     var rowNum = -1;
+     var eva = 1; //store the current evaluation result, reset to 1
+     //for each next display
      var table = document.createElement("table");
      table.id = "tableResult";
      var imgd1 = document.createElement("img");
@@ -68,13 +58,17 @@
                            var cell = row.insertCell(-1);
                            cell.innerHTML = cells[j];
                         }
+                        var cell = row.insertCell(-1);
+                        cell.innerHTML = eva;
+                        cell = row.insertCell(-1);
+                        cell.innerHTML = 0; //not yet evaluated
                     }
                     var dvCSV = document.getElementById("dvCSV");
                     dvCSV.innerHTML = "";
                     dvCSV.appendChild(table);
-                    
                     }
                     reader.readAsText(fileUpload.files[0]);
+                    alert("File successfully uploaded!");
                 } else {
                     alert("This browser does not support HTML5.");
                 }
@@ -84,13 +78,20 @@
         }
 
         function Display(){
+            if(rowNum != -1){
+            table.rows[rowNum].cells.item(4).innerHTML = 1;
+            }
+            rowNum = rowNum + 1;
             if (rowNum >= table.rows.length){
                 alert("Reached the end of the table");
+                rowNum = rowNum -1;
+                return;
             }
             var first = table.rows[rowNum].cells.item(0).innerHTML;
             var second = table.rows[rowNum].cells.item(1).innerHTML;
             var third = table.rows[rowNum].cells.item(2).innerHTML;
-            rowNum = rowNum + 1;
+            eva = 1;
+            UpdateEvaluation();
             imgd1.width = 100; imgs1.width = 100; imgt1.width = 100;
             imgd1.height = 100; imgs1.height = 100; imgt1.height = 100;
             imgd2.width = 100; imgs2.width = 100; imgt2.width = 100;
@@ -117,6 +118,24 @@
             document.body.appendChild(imgd3);
             document.body.appendChild(imgs3);
             document.body.appendChild(imgt3);
+        }
+
+        function ToggleEvaluation(){
+            eva = 1-eva;
+        }
+
+        function UpdateEvaluation(){
+            var  x = document.getElementById("Mark");
+            if (eva == 0){
+                x.innerHTML = "Marked as Noise";
+                x.style = "color: #82101C";
+                eva = 0;
+            }else{
+                x.innerHTML = "Marked as Good";
+                x.style = "color: #1DA0E0";
+                eva = 1;
+            }
+            table.rows[rowNum].cells.item(3).innerHTML = eva;
         }
 </script>
     <script src="excellentexport.js"></script>
