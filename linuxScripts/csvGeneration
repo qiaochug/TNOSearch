@@ -1,0 +1,28 @@
+#!/bin/bash
+#script for generating the csv file that contains
+#all the objects in the ccd and display in triplets
+
+count=0;
+fileName=exp479714ccd60.csv;
+for f in  diff*.gif
+do      num=${f: 4 : 9 }
+	count=$(($count+1));
+	if [ $count == 3 ]
+	then	
+		printf "$num\n" >> $fileName;
+		count=0;
+	else
+		printf "$num," >> $fileName;
+	fi
+done
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+       

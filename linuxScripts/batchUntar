@@ -1,0 +1,20 @@
+#!/bin/bash
+#My first script
+for sf in  2*_stamps.tar
+do 	num=${sf: 0 : 6 }
+	if [ ! -d $num ]
+	then
+        	echo "Processing $num"
+		tar xf $sf
+		cd $num/dp*/
+		for f in stamps*tar.gz;
+		do 	echo "untarring $f"
+			mkdir ${f: -9:2};
+			cd ${f: -9:2};
+			tar -zxf $"../$f" *.gif;
+			cd ../;
+		done
+		cd ../../;
+		printf "$num " >> processed;
+	fi
+done
