@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import argparse
 import pandas as pd
 import pickle
+from math import sqrt
 
 class Detection:
     def __init__(self, objid, fakeid, ra, dec, mjd):
@@ -30,52 +31,47 @@ def computeSpeed(fakeList, outputFile):
     with open(outputFile, 'w+') as output:
         listLen = len(fakeList)
         counter = 0
+        suspiciousList = []
         
         for fakeobj in fakeList:
             
             counter = counter + 1
             
-            # A list of tuples (raSpeed, decSpeed, mjd)
+            # A list of tuples (speed, mjd)
             # record all the speed calculated for this fake object
             speedList = []
             output.write(str(fakeobj.fakeid) + ': ' + str(len(fakeobj.listobj))+ '\n')
             prev = None
             
             for detection in fakeobj.listobj:
-                if prev != None and detection.mjd != prev.mjd:
+                if prev != None and detection.mjd - prev.mjd > 0.1:
                     timeelapsed = detection.mjd - prev.mjd
-                    raspeed = (detection.ra - prev.ra)/timeelapsed
-                    decspeed = (detection.dec - prev.dec)/timeelapsed
+                    radiff = detection.ra - prev.ra
+                    decdiff = detection.dec - prev.dec
+                    speed = sqrt(radiff**2 + decdiff**2)/timeelapsed
                     midtime = prev.mjd + timeelapsed/2
-                    speedList.append((raspeed, decspeed, midtime))
-                    output.write(str(raspeed) + ' ' + str(decspeed) + ' ' + \
-                                 str(midtime) + '\n')
+                    speedList.append((speed, midtime))
+                    output.write('Speed ' + str(speed) + ', MJD ' + str(detection.mjd) \
+                                 +', '+ str(prev.mjd) + ',Change '+ str(timeelapsed) +  '\n')
                 
                 prev = detection 
             
             output.write('----------------Speed Change Report---------------\n')
             prev = None
             for speed in speedList:
-                if prev != None and speed[2] != prev[2]:
-                    timeelapsed = speed[2] - prev[2]
-                    radiff = speed[0] - prev[0]
-                    raacc = radiff/timeelapsed
+                if prev != None and speed[1] != prev[1]:
+                    timeelapsed = speed[1] - prev[1]
+                    speeddiff = speed[0] - prev[0]
                     try:
-                        rapercent = radiff/speed[0]*100
+                        speedpercent = speeddiff/prev[0]*100
                     except ZeroDivisionError:
-                        rapercent = 'Speed was Zero'
-                        
-                                            
-                    decdiff = speed[1] - prev[1]
-                    decacc = decdiff/timeelapsed
-                    try:
-                        decpercent = decdiff/speed[1]*100
-                    except ZeroDivisionError:
-                        decpercent = 'Speed was Zero'
+                        speedpercent = 'Speed was Zero'
                                               
-                    output.write('ra increased '+str(rapercent) + '%, dec increased ' + str(decpercent) + '%')
+                    output.write('Speed increased '+str(speedpercent) + '% ')
                     output.write('in ' + str(timeelapsed)+ ' days\n')
-                
+                    if speedpercent >= 50 or speedpercent <= -50:
+                        suspiciousList.append((fakeobj.fakeid, speedpercent))
+                        
                 prev = speed
                              
             output.write('**************************************************\n\n')
@@ -83,6 +79,7 @@ def computeSpeed(fakeList, outputFile):
             sys.stdout.write("\rComputing the speed %2f%%"%(float(counter)/listLen*100))
             sys.stdout.flush()
         
+        output.write(str(suspiciousList))
         sys.stdout.write("\n")
         
 def parseFile(csvName):
