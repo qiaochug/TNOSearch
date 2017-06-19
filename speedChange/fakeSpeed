@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jun 16 11:11:56 2017
+
+@author: qiaochug
+"""
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+import argparse
+import pandas as pd
+import pickle
+
+class Detection:
+    def __init__(self, objid, fakeid, ra, dec, mjd):
+        self.objid = objid
+        self.fakeid = fakeid
+        self.ra = ra
+        self.dec = dec
+        self.mjd = mjd
+
+class fakeObj:
+    def __init__(self, fakeid):
+        self.fakeid = fakeid
+        self.listobj = []
+
+def computeSpeed(fakeList, outputFile):
+    with open(outputFile, 'w+') as output:
+        listLen = len(fakeList)
+        counter = 0
+        
+        for fakeobj in fakeList:
+            
+            counter = counter + 1
+            
+            # A list of tuples (raSpeed, decSpeed, mjd)
+            # record all the speed calculated for this fake object
+            speedList = []
+            output.write(str(fakeobj.fakeid) + ': ' + str(len(fakeobj.listobj))+ '\n')
+            prev = None
+            
+            for detection in fakeobj.listobj:
+                if prev != None and detection.mjd != prev.mjd:
+                    timeelapsed = detection.mjd - prev.mjd
+                    raspeed = (detection.ra - prev.ra)/timeelapsed
+                    decspeed = (detection.dec - prev.dec)/timeelapsed
+                    midtime = prev.mjd + timeelapsed/2
+                    speedList.append((raspeed, decspeed, midtime))
+                    output.write(str(raspeed) + ' ' + str(decspeed) + ' ' + \
+                                 str(midtime) + '\n')
+                
+                prev = detection 
+            
+            output.write('----------------Speed Change Report---------------\n')
+            prev = None
+            for speed in speedList:
+                if prev != None and speed[2] != prev[2]:
+                    timeelapsed = speed[2] - prev[2]
+                    radiff = speed[0] - prev[0]
+                    raacc = radiff/timeelapsed
+                    try:
+                        rapercent = radiff/speed[0]*100
+                    except ZeroDivisionError:
+                        rapercent = 'Speed was Zero'
+                        
+                                            
+                    decdiff = speed[1] - prev[1]
+                    decacc = decdiff/timeelapsed
+                    try:
+                        decpercent = decdiff/speed[1]*100
+                    except ZeroDivisionError:
+                        decpercent = 'Speed was Zero'
+                                              
+                    output.write('ra increased '+str(rapercent) + '%, dec increased ' + str(decpercent) + '%')
+                    output.write('in ' + str(timeelapsed)+ ' days\n')
+                
+                prev = speed
+                             
+            output.write('**************************************************\n\n')
+            
+            sys.stdout.write("\rComputing the speed %2f%%"%(float(counter)/listLen*100))
+            sys.stdout.flush()
+        
+        sys.stdout.write("\n")
+        
+def parseFile(csvName):
+    df = pd.read_csv(csvName)
+    fakeList = []
+    listLen = len(df.index)
+    counter = 0
+    for index, row in df.iterrows():
+        
+       counter = counter + 1
+       
+       det = Detection(row['objid'], row['fakeid'], row['ra'], row['dec'], row['mjd'])
+       if len(fakeList) == 0 or fakeList[-1].fakeid != row['fakeid']:
+           newObj = fakeObj(row['fakeid'])
+           newObj.listobj.append(det)
+           fakeList.append(newObj)
+       else:
+           fakeList[-1].listobj.append(det)
+       
+       sys.stdout.write("\rParsing the File %2f%%"%(float(counter)/listLen*100))
+       sys.stdout.flush()
+    
+    pickle.dump( fakeList, open( "pickledfakecsv.pickle", "wb" ) )
+    
+    return fakeList
+        
+    
+def main():
+    """
+    takes in a csv file with fakes info
+    the file is sorted to list the detections of the same fakeid together
+    and sorted from early detection to later
+    Para: if a pickle file is passed in then we would use the pickle file
+    instead of a csv file
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('inputfile', nargs = 1, default = None,
+                         help = 'path to csv file')
+    parser.add_argument('outputfile', nargs = '?',
+                        default = 'out.txt', 
+                        help = 'outputFile for writing the speed')
+    
+    args = parser.parse_args()
+    if (str(args.inputfile[0])[-4:] == ".csv"):
+        fakeList = parseFile(args.inputfile[0])
+    else:
+        fakeList = pickle.load( open(args.inputfile[0], "rb" ) )
+    
+    computeSpeed(fakeList, args.outputfile)
+
+if __name__ == '__main__':
+    main()
