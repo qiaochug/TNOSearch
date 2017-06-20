@@ -13,6 +13,7 @@ import argparse
 import pandas as pd
 import pickle
 from math import sqrt
+from jdcal import jd2gcal
 
 class Detection:
     def __init__(self, objid, fakeid, ra, dec, mjd):
@@ -28,10 +29,19 @@ class fakeObj:
         self.listobj = []
 
 def computeSpeed(fakeList, outputFile):
+    """
+    write to an outputFile about the speed and change in speed 
+    for each fake object's using all detections
+    also return a list called collection, which includes
+    tuples of (speed change percentage, time interval)
+    """
     with open(outputFile, 'w+') as output:
         listLen = len(fakeList)
         counter = 0
         suspiciousList = []
+        collection = []
+        positive = []
+        negative = []
         
         for fakeobj in fakeList:
             
@@ -64,13 +74,18 @@ def computeSpeed(fakeList, outputFile):
                     speeddiff = speed[0] - prev[0]
                     try:
                         speedpercent = speeddiff/prev[0]*100
+                        if timeelapsed < 100:
+                            collection.append((speedpercent, timeelapsed))
+                            output.write('Speed increased '+str(speedpercent) + '% ')
+                            output.write('in ' + str(timeelapsed)+ ' days\n')
+                            if speedpercent >= 50 or speedpercent <= -50:
+                                suspiciousList.append((fakeobj.fakeid, speedpercent))
+                            if speedpercent > 0:
+                                positive.append(prev[1])
+                            else:
+                                negative.append(prev[1])
                     except ZeroDivisionError:
                         speedpercent = 'Speed was Zero'
-                                              
-                    output.write('Speed increased '+str(speedpercent) + '% ')
-                    output.write('in ' + str(timeelapsed)+ ' days\n')
-                    if speedpercent >= 50 or speedpercent <= -50:
-                        suspiciousList.append((fakeobj.fakeid, speedpercent))
                         
                 prev = speed
                              
@@ -79,10 +94,17 @@ def computeSpeed(fakeList, outputFile):
             sys.stdout.write("\rComputing the speed %2f%%"%(float(counter)/listLen*100))
             sys.stdout.flush()
         
-        output.write(str(suspiciousList))
+        output.write('Here is a list of suspiciously large change in speed: \n' \
+                     + str(suspiciousList) + '\n')
+        
+        output.write('positive' + str(positive) + '\n')
+        output.write('negative' + str(negative))
+        
         sys.stdout.write("\n")
         
-def parseFile(csvName):
+        return collection, positive, negative
+        
+def parseFile(csvName, season):
     df = pd.read_csv(csvName)
     fakeList = []
     listLen = len(df.index)
@@ -102,10 +124,43 @@ def parseFile(csvName):
        sys.stdout.write("\rParsing the File %2f%%"%(float(counter)/listLen*100))
        sys.stdout.flush()
     
-    pickle.dump( fakeList, open( "pickledfakecsv.pickle", "wb" ) )
+    pickle.dump( fakeList, open( "pickledfakecsv"+str(season)+".pickle", "wb" ) )
     
     return fakeList
         
+
+def visualize(collection,season):
+    collection = np.array(collection)
+    x = collection[:,1]
+    y = collection[:,0]
+    colors = (0,0,0)
+    area = np.pi*3
+    
+    plt.scatter(x,y,s = area,c = colors)
+    plt.title('Season ' + str(season))
+    plt.xlabel('Time Interval')
+    plt.ylabel('Speed Change Percentage')
+    plt.show()
+    plt.close()
+
+def visualizeSign(positive, negative, season):
+    # index the observations from 1 to total number
+    xpo = np.arange(1,len(positive)+1)
+    ypo = np.arange(len(positive)+ 1, len(positive) + len(negative) + 1)
+    
+    for i in np.arange(0,len(positive)):
+        positive[i] = (jd2gcal(2400000.5, positive[i]))[1]
+    
+    for i in np.arange(0, len(negative)):
+        negative[i] = (jd2gcal(2400000.5, negative[i]))[1]
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(1,1,1)
+    
+    ax.scatter(xpo,positive, c='red',s = 3*np.pi, label = "positive")
+    ax.scatter(ypo,negative, c='green',s = 3*np.pi, label = "negative")
+    plt.title('Sign analysis Season' + str(season))
+    plt.show()
     
 def main():
     """
@@ -116,19 +171,25 @@ def main():
     instead of a csv file
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument('season', nargs = 1, default = None,
+                         help = 'Season Number, used for naming graph')
     parser.add_argument('inputfile', nargs = 1, default = None,
                          help = 'path to csv file')
-    parser.add_argument('outputfile', nargs = '?',
+    parser.add_argument('outputfile', nargs = 1,
                         default = 'out.txt', 
                         help = 'outputFile for writing the speed')
     
     args = parser.parse_args()
     if (str(args.inputfile[0])[-4:] == ".csv"):
-        fakeList = parseFile(args.inputfile[0])
+        fakeList = parseFile(args.inputfile[0], args.season[0])
     else:
         fakeList = pickle.load( open(args.inputfile[0], "rb" ) )
     
-    computeSpeed(fakeList, args.outputfile)
+    collection, positive, negative = computeSpeed(fakeList, args.outputfile[0])
+    
+    visualize(collection, args.season[0])
+    
+    visualizeSign(positive, negative, args.season[0])
 
 if __name__ == '__main__':
     main()
