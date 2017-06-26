@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Jun 24 20:10:36 2017
+
+@author: qiaochug
+"""
+
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import pickle
+
+def parse(csvin, output):
+    df = pd.read_csv(csvin) 
+    ids = []
+    for index, row in df.iterrows():
+        if row['id1'] not in ids:
+            ids.append(row[0])
+        if row['id2'] not in ids:
+            ids.append(row[1])
+        if row['id3'] not in ids:
+            ids.append(row[2])
+    
+    pickle.dump(ids, open(output, "wb"))
+    another = pickle.load( open(output, "rb" ) )
+    print(another)
+    
+
+def main():
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('csvfileinput', nargs = 1, default = None,
+                         help = 'input csvfils containing repeating ids')
+    parser.add_argument('output', nargs = 1, default = "uniqueids.pickle",
+                         help = 'output csv file with unique ids')
+    args = parser.parse_args()
+    
+    ids = parse(args.csvfileinput[0], args.output[0])
+
+if __name__ == '__main__':
+    main()

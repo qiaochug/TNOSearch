@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for num in {1..40}
+do scp qguo@des41.FNAL.GOV:~/mjdbkgd$num.csv .
+done
