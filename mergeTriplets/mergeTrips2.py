@@ -100,7 +100,7 @@ def growtrees(graph, d):
                         CCgood.append(blob)
                     if blob in blobsnow:
                         blobsnow.remove(blob)
-    good = good + CCgood
+        good.extend(CCgood)
     return good
 
 #given a graph, finds the connected components and attempts to identify objects from them
@@ -131,17 +131,17 @@ def main():
     good = growtrees(G,d)
 
     #saves every merged triplets 
-    #saveGoodName = 'goodTriplets+' + saveName
+    saveGoodName = 'goodTriplets2+' + saveName
     #saveBadName = 'badTriplets+' + saveName 
-    #writeTriplets(good, saveGoodName + '.txt')
+    writeTriplets(good, saveGoodName + '.txt')
     #writeTriplets(bad, saveBadName + '.txt')
-    #pickleTriplets(good, saveGoodName + '.pickle')
+    pickleTriplets(good, saveGoodName + '.pickle')
     #pickleTriplets(bad, saveBadName + '.pickle')
     
-    #graphs original merged graph
+    # graphs original merged graph
     #graphLinks(G, dict, saveName)
-    #G, dict= connectGraph(good)
-    #graphLinks(G, dict, saveName)
+    G, dict= connectGraph(good)
+    graphLinks(G, dict, saveName,[-10,-6,-47,-43])
     #, [3.4,5.2,-1,0])
     '''
     merged = findObjects(G)
