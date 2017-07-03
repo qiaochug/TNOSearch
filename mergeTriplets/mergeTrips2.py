@@ -13,64 +13,24 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib
 import itertools
-   
-#removes detections one by one to test if orbits fit
-def removeDets(triplets):
-    goodTriplets = []
-    badTriplets = []
-    time0 = time.time()
-    counter = 0
-    for trip in triplets:
-        printPercentage(counter, len(triplets), time.time()-time0)
-        elements, errs= trip.calcOrbit()
-        if(elements['a'] > 2 and elements['e'] < 1):
-            goodTriplets.append(trip)
-        elif(len(trip.dets) > 3):
-            found = False
-            for x in range(len(trip.dets)):
-                tripTest = Triplet(trip.dets[:x] + trip.dets[(x+1):])
-                elements, errs = tripTest.calcOrbit()
-                if(elements['a'] > 2 and elements['e'] < 1):
-                    goodTriplets.append(tripTest)
-                    found = True
-                    continue
+def contains(subseq, inseq):
+    return any(inseq[pos:pos + len(subseq)] == subseq for pos in range(0, len(inseq) - len(subseq) + 1))
 
-            if(not found):
-                badTriplets.append(trip)
-            
-        else:
-            badTriplets.append(trip)
-        counter+=1
-    return goodTriplets, badTriplets            
-
-#given a list of triplets, return a list of triplets where no two detections have the same exposure
-def filterSameExp(triplets):
-    print('\n')
-    result = []
-    for trip in triplets:
-        dets = trip.dets
-        #place each detection in its respective night
-        mjds = set([x.mjd for x in dets]) 
-        #dictionary where mjd is key, and value is list of detections
-        mjdCount = dict([(x,[]) for x in mjds])
-        for det in dets:
-            mjdCount[det.mjd].append(det)
-        #convert dictionary to list
-        countList = mjdCount.values()
-        #get every combination of those triplets
-        result += (list(itertools.product(*countList)))
-    return result
 
 def worthadding(newblob, listofblob):
+    count = 0
     for oldblob in listofblob:
-        inthisold = True
-        for nodeb in newblob.dets:
-            if nodeb not in oldblob.dets:
-                inthisold = False
-                continue
-        if inthisold:
-            return False
-    return True
+        oldblob = oldblob.dets
+        if contains(newblob.dets, oldblob):
+            return listofblob # oldblob already has it
+        if contains(oldblob, newblob.dets):
+            # should put the new blob in and old blob out
+            listofblob.pop(count)
+            listofblob.append(newblob)
+            return listofblob
+        count = count + 1
+    listofblob.append(newblob)
+    return listofblob 
         
 
 def growtrees(graph, d):
@@ -84,8 +44,7 @@ def growtrees(graph, d):
                     successors = graph.successors(blob.dets[-1])
                     if not successors:
                         blobsnow.remove(blob)
-                        if worthadding(blob, CCgood):
-                            CCgood.append(blob)
+                        worthadding(blob, CCgood)
                         continue
                     for next in successors:
                         trydets = blob.dets[:]
@@ -96,8 +55,7 @@ def growtrees(graph, d):
                             if blob in blobsnow:
                                 blobsnow.remove(blob)
                             blobsnow.append(tryblob)
-                    if worthadding(blob,CCgood):
-                        CCgood.append(blob)
+                    worthadding(blob,CCgood)
                     if blob in blobsnow:
                         blobsnow.remove(blob)
         good.extend(CCgood)
@@ -131,7 +89,7 @@ def main():
     good = growtrees(G,d)
 
     #saves every merged triplets 
-    saveGoodName = 'goodTriplets2+' + saveName
+    saveGoodName = 'goodTriplets3+' + saveName
     #saveBadName = 'badTriplets+' + saveName 
     writeTriplets(good, saveGoodName + '.txt')
     #writeTriplets(bad, saveBadName + '.txt')
@@ -141,7 +99,7 @@ def main():
     # graphs original merged graph
     #graphLinks(G, dict, saveName)
     G, dict= connectGraph(good)
-    graphLinks(G, dict, saveName,[-10,-6,-47,-43])
+    graphLinks(G, dict, saveName)
     #, [3.4,5.2,-1,0])
     '''
     merged = findObjects(G)

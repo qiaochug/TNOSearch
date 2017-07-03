@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jul  3 12:36:38 2017
+
+@author: qiaochug
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+def contains(subseq, inseq):
+    return any(inseq[pos:pos + len(subseq)] == subseq for pos in range(0, len(inseq) - len(subseq) + 1))
+
+#class that stores triplets
+class Triplet:
+    #input is array of detections
+    def __init__(self, dets):
+        #is a list
+        self.dets = dets
+    def __str__(self):
+        return str(self.dets)
+        
+def worthadding(newblob, listofblob):
+    count = 0
+    for oldblob in listofblob:
+        oldblob = oldblob.dets
+        if contains(newblob.dets, oldblob):
+            return listofblob # oldblob already has it
+        if contains(oldblob, newblob.dets):
+            # should put the new blob in and old blob out
+            listofblob.pop(count)
+            listofblob.append(newblob)
+            return listofblob
+        count = count + 1
+    listofblob.append(newblob)
+    return listofblob
+
+a = worthadding(Triplet([1,2,3]), [Triplet([5,1,2,3,7,8]), Triplet([0,0])])
+for trip in a:
+    print(trip)
+    
+b = worthadding(Triplet([3,1,2,3,4]), [Triplet([2,3]), Triplet([2,5,3])])
+for trip in b:
+    print(trip)
+    
+b = worthadding(Triplet([9,0]), [Triplet([2,3]), Triplet([2,5,3])])
+for trip in b:
+    print(trip)

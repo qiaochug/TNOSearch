@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jul  3 11:55:38 2017
+
+@author: qiaochug
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+def contains(subseq, inseq):
+    return any(inseq[pos:pos + len(subseq)] == subseq for pos in range(0, len(inseq) - len(subseq) + 1))
+
+#class that stores triplets
+class Triplet:
+    #input is array of detections
+    def __init__(self, dets):
+        #is a list
+        self.dets = dets
+        
+def worthadding(newblob, listofblob):
+    newblob = newblob.dets
+    for oldblob in listofblob:
+        oldblob = oldblob.dets
+        if contains(newblob, oldblob) or contains(oldblob,newblob):
+            return False
+    return True
+
+a = Triplet([1,2,3])
+b = Triplet([1,2,3,4,5]) # contains a
+f = Triplet([9,5,1,2,3,4,5]) # contains a
+h = Triplet([9,5,1,2,3]) # contains a
+
+g = Triplet([9,5,1,3,2,4,5]) # does not contain a
+c = Triplet([1,4,5]) # does not contain a
+d = Triplet([3,5,6,1,4,2]) # cantain not a
+e = Triplet([4,7,1]) # does not contain a
+i = Triplet([9,3,5,6,1,4,2]) # cantain not a
+
+A = [a]
+B = [b]
+C = [f]
+D = [h]
+E = [a,b]
+F = [g,c,d,e,i,f] 
+
+G = [g,c,d,e,i] 
+
+print(worthadding(a, A))
+print(worthadding(a, B))
+print(worthadding(a, C))
+print(worthadding(a, D))
+print(worthadding(a, E))
+
+print(worthadding(a, F))
+print(worthadding(a, G))
+
