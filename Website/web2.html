@@ -1,0 +1,186 @@
+<!-- This, is a comment that does not affect any of the code we write. We can use this to leave notes in the code for our future selves, or for others reading our code. This is also the most basic HTML document you can create. -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Triplet Visual Evaluation</title>
+  </head>
+    <body>
+    <p style = "color: #111; font-family: 'Open Sans Condensed', sans-serif; font-size: 32px; font-weight: 700; line-height: 64px; margin: 0 0 0; padding: 20px 30px; text-align: center; "> Triplet Visual Evaluation</p>
+    <p style = "padding: 0px 50px"> Instruction:</p>
+    <p style = "padding: 0px 50px"> 1. Upload a cvs file, each row containing three
+    IDs of the three object in a triplet 
+    <br>2. For each display, if the triplet is
+    shown to be problematic, mark as noise(if not marked, the triplet
+    would be marked as good)
+    <br> 3. Click through all triplets in the csv file
+    by clicking "Next" 
+    <br> 4. When the webpage alert that you have reached the end of the cvs file, save the result of evluation by clicking "Export Result to CSV", the CSV file would have in every row three IDs and a forth column of 1 or 0, with 1 meaning good and 0 meaning noise. The forth column shows 1 if the triplet has been evaluated in the web app, 0 otherwise. The last column is for keeping track of progress in case user need to exit before finishing all the evaluation.
+    <br> 5. You could upload multiple csv files and export result in one csv after finishing evaluation of all of them
+    </p >
+    <input type="file" id = "fileUpload" style = "padding: 0px 50px">
+    <button onclick="Upload()">Upload</button>
+    <table id = "dvCSV", style="display: none">
+
+    <a download="testDownload.csv" href="#" onclick="return ExcellentExport.csv(this, 'tableResult');">Export Result to CSV</a>
+    <br>
+    <br>
+    <p style = "padding: 0px 50px">
+    <button onclick="Display(-1)" id = "previousButton">Previous</button>
+    <button onclick="Display(1)" id = "nextButton">Next</button>
+    <button onclick = "ToggleEvaluation(), UpdateEvaluation()", id = "toggle">Toggle Evaluation</button>
+    <div id = "Mark", style = "color: #3498DB; padding: 0px 50px; font-size: 20px; font-weight: 600; margin: 0px 0px 0px 450px">Marked as Good</div>
+    </p>
+    <script type="text/javascript">
+     var rowNum = -1;
+     var eva = 1; //store the current evaluation result, reset to 1
+     //for each next display
+     //this table is a replicate of the input table, it will not be
+     //displayed but will be used for storing and exporting the result to csv
+     var table = document.createElement("table");
+     table.id = "tableResult";
+     var imgd1 = document.createElement("img");
+     var imgs1 = document.createElement("img");
+     var imgt1 = document.createElement("img");
+     var imgd2 = document.createElement("img");
+     var imgs2 = document.createElement("img");
+     var imgt2 = document.createElement("img");
+     var imgd3 = document.createElement("img");
+     var imgs3 = document.createElement("img");
+     var imgt3 = document.createElement("img");
+     var space1 = document.createElement("br");
+     var space2 = document.createElement("br");
+     imgd1.style = "margin: 0px 0px 0px 420px";
+     imgd2.style = "margin: 0px 0px 0px 420px";
+     imgd3.style = "margin: 0px 0px 0px 420px";
+    function Upload() {
+        var fileUpload = document.getElementById("fileUpload");
+        var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.txt)$/;
+        if (regex.test(fileUpload.value.toLowerCase())) {
+            if (typeof (FileReader) != "undefined") {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var rows = e.target.result.split("\n");
+                    for (var i = 0; i < rows.length; i++) {
+                        var row = table.insertRow(-1);
+                        var cells = rows[i].split(",");
+                        for (var j = 0; j < cells.length; j++) {
+                           var cell = row.insertCell(-1);
+                           cell.innerHTML = cells[j];
+                        }
+                        var cell = row.insertCell(-1);
+                        cell.innerHTML = eva;
+                        cell = row.insertCell(-1);
+                        cell.innerHTML = 0; //not yet evaluated
+                    }
+                    var dvCSV = document.getElementById("dvCSV");
+                    dvCSV.innerHTML = "";
+                    dvCSV.appendChild(table);
+                    }
+                    reader.readAsText(fileUpload.files[0]);
+                    alert("File successfully uploaded!");
+                } else {
+                    alert("This browser does not support HTML5.");
+                }
+            } else {
+                alert("Please upload a valid CSV file.");
+            }
+        }
+
+        function Display(a){
+            if(a == 1){
+                if(rowNum != -1|| rowNum >= table.rows.length){
+                table.rows[rowNum].cells.item(4).innerHTML = 1;
+                }
+            }
+
+            rowNum = rowNum + a;
+
+            if (rowNum >= table.rows.length){
+                alert("Reached the end of the table");
+                rowNum = rowNum -1;
+                return;
+            }
+            if(rowNum < 0){
+                alert("No previous triplet");
+                rowNum = rowNum +1;
+                return;
+            }
+            var first = table.rows[rowNum].cells.item(0).innerHTML;
+            var second = table.rows[rowNum].cells.item(1).innerHTML;
+            var third = table.rows[rowNum].cells.item(2).innerHTML;
+            if(a == 1){
+                if(table.rows[rowNum].cells.item(4).innerHTML){
+                    //if we are going forward, to a triplet that we already evaluated
+                    eva = table.rows[rowNum].cells.item(3).innerHTML;
+                }else{
+                    //if we are going to a new next triplet
+                    eva = 1; 
+                }
+            }else{
+                //going to a previous triplet
+                eva = table.rows[rowNum].cells.item(3).innerHTML;
+            }
+            UpdateEvaluation();
+            imgd1.width = 100; imgs1.width = 100; imgt1.width = 100;
+            imgd1.height = 100; imgs1.height = 100; imgt1.height = 100;
+            imgd2.width = 100; imgs2.width = 100; imgt2.width = 100;
+            imgd2.height = 100; imgs2.height = 100; imgt2.height = 100;
+            imgd3.width = 100; imgs3.width = 100; imgt3.width = 100;
+            imgd3.height = 100; imgs3.height = 100; imgt3.height = 100;
+            exponum1 = 487032;
+            season = 240;
+            ccd = 52;
+            if (ccd < 10){
+                ccd = "0"+ccd;
+            }
+            imgd1.src = exponum +"/dp"+season+"/"+ccd+"/diff" +  first + ".gif";
+            imgs1.src = exponum +"/dp"+season+"/"+ccd+"/srch" + first + ".gif";
+            imgt1.src = exponum +"/dp"+season+"/"+ccd+"/temp" + first + ".gif";
+            imgd2.src = exponum +"/dp"+season+"/"+ccd+"/diff" +  second + ".gif";
+            imgs2.src = exponum +"/dp"+season+"/"+ccd+"/srch" + second + ".gif";
+            imgt2.src = exponum +"/dp"+season+"/"+ccd+"/temp" + second + ".gif";
+            imgd3.src = exponum +"/dp"+season+"/"+ccd+"/diff" +  third + ".gif";
+            imgs3.src = exponum +"/dp"+season+"/"+ccd+"/srch" + third + ".gif";
+            imgt3.src = exponum +"/dp"+season+"/"+ccd+"/temp" + third + ".gif";
+            document.body.appendChild(imgd1);
+            document.body.appendChild(imgs1);
+            document.body.appendChild(imgt1);
+            document.body.appendChild(space1);
+            document.body.appendChild(imgd2);
+            document.body.appendChild(imgs2);
+            document.body.appendChild(imgt2);
+            document.body.appendChild(space2);
+            document.body.appendChild(imgd3);
+            document.body.appendChild(imgs3);
+            document.body.appendChild(imgt3);
+        }
+
+        function ToggleEvaluation(){
+            eva = 1-eva;
+        }
+
+        function UpdateEvaluation(){
+            var  x = document.getElementById("Mark");
+            if (eva == 0){
+                x.innerHTML = "Marked as Noise";
+                x.style.color = "#82101C";
+                eva = 0;
+            }else{
+                x.innerHTML = "Marked as Good";
+                x.style.color = "#3498DB";
+                eva = 1;
+            }
+            table.rows[rowNum].cells.item(3).innerHTML = eva;
+        }
+</script>
+<script>
+        var b1 = document.getElementById("previousButton");
+        var b2 = document.getElementById("nextButton");
+        var b3 = document.getElementById("toggle");
+        b1.style = "width: 15%; height: 60px;text-align: center; color: #D35400  ;border: 2px #7F8C8D   solid; font-size: 15px; background-color: #FDFEFE; font-weight: 700; border-radius: 8px; margin:0px 5px 0px 200px";
+        b2.style = "width: 15%; height: 60px;text-align: center; color: #D35400  ;border: 2px #7F8C8D   solid; font-size: 15px; background-color: #FDFEFE; font-weight: 700;border-radius: 8px; margin: 0px 150px 0px 0px";
+        b3.style = "width: 15%; height: 50px;text-align: center; color: #D35400  ;border: 2px #7F8C8D   solid; font-size: 15px; background-color: #FDFEFE; font-weight: 700;border-radius: 8px; ";
+</script>
+    <script src="excellentexport.js"></script>
+  </body>
+</html>
