@@ -7,14 +7,10 @@
     <body>
     <p style = "color: #111; font-family: 'Open Sans Condensed', sans-serif; font-size: 32px; font-weight: 700; line-height: 64px; margin: 0 0 0; padding: 20px 30px; text-align: center; "> Triplet Visual Evaluation</p>
     <p style = "padding: 0px 50px"> Instruction:</p>
-    <p style = "padding: 0px 50px"> 1. Upload a cvs file, each row containing three
-    IDs of the three object in a triplet 
-    <br>2. For each display, if the triplet is
-    shown to be problematic, mark as noise(if not marked, the triplet
-    would be marked as good)
-    <br> 3. Click through all triplets in the csv file
-    by clicking "Next" 
-    <br> 4. When the webpage alert that you have reached the end of the cvs file, save the result of evluation by clicking "Export Result to CSV", the CSV file would have in every row three IDs and a forth column of 1 or 0, with 1 meaning good and 0 meaning noise. The forth column shows 1 if the triplet has been evaluated in the web app, 0 otherwise. The last column is for keeping track of progress in case user need to exit before finishing all the evaluation.
+    <p style = "padding: 0px 50px"> 1. Upload a cvs file, each row formatted as "objid1 expnum1 season1 ccd1 objid2 expnum2 season2 ccd2 objid3 expnum3 season3 ccd3"
+    <br>2. For each display, if the triplet is shown to be problematic, mark as noise(if not marked, the triplet would be marked as good)
+    <br> 3. Click through all triplets in the csv file by clicking "Next" 
+    <br> 4. When the webpage alert that you have reached the end of the cvs file, save the result of evluation by clicking "Export Result to CSV", the CSV file would have in every row all the passed in information and a 13th column of 1 or 0, with 1 meaning good and 0 meaning noise. The 14th column shows 1 if the triplet has been evaluated in the web app, 0 otherwise. The last column(14th) is for keeping track of progress in case user need to exit before finishing all the evaluation.
     <br> 5. You could upload multiple csv files and export result in one csv after finishing evaluation of all of them
     </p >
     <input type="file" id = "fileUpload" style = "padding: 0px 50px">
@@ -28,7 +24,8 @@
     <button onclick="Display(-1)" id = "previousButton">Previous</button>
     <button onclick="Display(1)" id = "nextButton">Next</button>
     <button onclick = "ToggleEvaluation(), UpdateEvaluation()", id = "toggle">Toggle Evaluation</button>
-    <div id = "Mark", style = "color: #3498DB; padding: 0px 50px; font-size: 20px; font-weight: 600; margin: 0px 0px 0px 450px">Marked as Good</div>
+    <div id = "Mark", style = "color: #3498DB; padding: 0px 50px; font-size: 20px; font-weight: 600; margin: 0px 0px 0px 440px">Marked as Good</div>
+    <div id = "ExpCcd", style = "color: #3498DB; padding: 0px 50px; font-size: 20px; font-weight: 600; margin: 0px 0px 0px 390px"></div>
     </p>
     <script type="text/javascript">
      var rowNum = -1;
@@ -36,8 +33,12 @@
      //for each next display
      //this table is a replicate of the input table, it will not be
      //displayed but will be used for storing and exporting the result to csv
+     var expnum_g = 0; //store expnum in global for display (displayed as the expnum of the first obj in the triplet)
+     var ccd_g = 0; // store ccd in global for display (displayed as the ccd of the first obj in the triplet)
      var table = document.createElement("table");
      table.id = "tableResult";
+
+     //create the image elements for display
      var imgd1 = document.createElement("img");
      var imgs1 = document.createElement("img");
      var imgt1 = document.createElement("img");
@@ -52,6 +53,9 @@
      imgd1.style = "margin: 0px 0px 0px 420px";
      imgd2.style = "margin: 0px 0px 0px 420px";
      imgd3.style = "margin: 0px 0px 0px 420px";
+
+     // check the file type of uploaded file and replicate
+     // information into a html table
     function Upload() {
         var fileUpload = document.getElementById("fileUpload");
         var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.txt)$/;
@@ -86,15 +90,20 @@
             }
         }
 
+        //Display the previous or next triplet, depending on whether -1 or 1 is passed in
         function Display(a){
+            
+            //Advacing to the next triplet, current triplet should be marked as evaluated
             if(a == 1){
                 if(rowNum != -1|| rowNum >= table.rows.length){
-                table.rows[rowNum].cells.item(4).innerHTML = 1;
+                table.rows[rowNum].cells.item(13).innerHTML = 1;
                 }
             }
-
+            
+            //point to the current row of triplet this method is trying to display
             rowNum = rowNum + a;
 
+            //check and alert user if the end or head of the table is reached
             if (rowNum >= table.rows.length){
                 alert("Reached the end of the table");
                 rowNum = rowNum -1;
@@ -105,43 +114,72 @@
                 rowNum = rowNum +1;
                 return;
             }
-            var first = table.rows[rowNum].cells.item(0).innerHTML;
-            var second = table.rows[rowNum].cells.item(1).innerHTML;
-            var third = table.rows[rowNum].cells.item(2).innerHTML;
+            
+            //getting all the information needed for construtcting the path to the image
+            var objid1 = table.rows[rowNum].cells.item(0).innerHTML;
+            var expnum1 = table.rows[rowNum].cells.item(1).innerHTML;
+            var season1 = table.rows[rowNum].cells.item(2).innerHTML;
+            var ccd1 = table.rows[rowNum].cells.item(3).innerHTML;
+            var objid2 = table.rows[rowNum].cells.item(4).innerHTML;
+            var expnum2 = table.rows[rowNum].cells.item(5).innerHTML;
+            var season2 = table.rows[rowNum].cells.item(6).innerHTML;
+            var ccd2 = table.rows[rowNum].cells.item(7).innerHTML;
+            var objid3 = table.rows[rowNum].cells.item(8).innerHTML;
+            var expnum3 = table.rows[rowNum].cells.item(9).innerHTML;
+            var season3 = table.rows[rowNum].cells.item(10).innerHTML;
+            var ccd3 = table.rows[rowNum].cells.item(11).innerHTML;
+
+            //update the global expnum and ccd
+            expnum_g = expnum1
+            ccd_g = ccd1
+            
+            //updating evaluation result(automatically, for consistency,
+            //not taking in user's opinion here) for this triplet based on whether we are going forward or 
+            //backward and also based on previous evaluation
             if(a == 1){
-                if(table.rows[rowNum].cells.item(4).innerHTML){
-                    //if we are going forward, to a triplet that we already evaluated
-                    eva = table.rows[rowNum].cells.item(3).innerHTML;
+                if(table.rows[rowNum].cells.item(13).innerHTML){
+                    //if we are going forward,  and is to a triplet that we already evaluated
+                    eva = table.rows[rowNum].cells.item(12).innerHTML;
                 }else{
-                    //if we are going to a new next triplet
+                    //if we are going to a new next triplet, which we never evaluated before
                     eva = 1; 
                 }
             }else{
                 //going to a previous triplet
-                eva = table.rows[rowNum].cells.item(3).innerHTML;
+                eva = table.rows[rowNum].cells.item(12).innerHTML;
             }
+            
+            //not taking in user opinion(that is in toggle evaluation), just to display current
+            //evaluation of the current triplet, also for consistency
             UpdateEvaluation();
+            
             imgd1.width = 100; imgs1.width = 100; imgt1.width = 100;
             imgd1.height = 100; imgs1.height = 100; imgt1.height = 100;
             imgd2.width = 100; imgs2.width = 100; imgt2.width = 100;
             imgd2.height = 100; imgs2.height = 100; imgt2.height = 100;
             imgd3.width = 100; imgs3.width = 100; imgt3.width = 100;
             imgd3.height = 100; imgs3.height = 100; imgt3.height = 100;
-            exponum1 = 487032;
-            season = 240;
-            ccd = 52;
-            if (ccd < 10){
-                ccd = "0"+ccd;
+            //for string formatting, padding 0s 
+            if (ccd1 < 10){
+                ccd1 = "0"+ccd1;
             }
-            imgd1.src = exponum +"/dp"+season+"/"+ccd+"/diff" +  first + ".gif";
-            imgs1.src = exponum +"/dp"+season+"/"+ccd+"/srch" + first + ".gif";
-            imgt1.src = exponum +"/dp"+season+"/"+ccd+"/temp" + first + ".gif";
-            imgd2.src = exponum +"/dp"+season+"/"+ccd+"/diff" +  second + ".gif";
-            imgs2.src = exponum +"/dp"+season+"/"+ccd+"/srch" + second + ".gif";
-            imgt2.src = exponum +"/dp"+season+"/"+ccd+"/temp" + second + ".gif";
-            imgd3.src = exponum +"/dp"+season+"/"+ccd+"/diff" +  third + ".gif";
-            imgs3.src = exponum +"/dp"+season+"/"+ccd+"/srch" + third + ".gif";
-            imgt3.src = exponum +"/dp"+season+"/"+ccd+"/temp" + third + ".gif";
+            if (ccd2 < 10){
+                ccd2 = "0"+ccd2;
+            }
+            if (ccd3 < 10){
+                ccd3 = "0"+ccd3;
+            }
+
+            imgd1.src = expnum1 +"/dp"+season1+"/"+ccd1+"/diff" +  objid1 + ".gif";
+            imgs1.src = expnum1 +"/dp"+season1+"/"+ccd1+"/srch" + objid1 + ".gif";
+            imgt1.src = expnum1 +"/dp"+season1+"/"+ccd1+"/temp" + objid1 + ".gif";
+            imgd2.src = expnum2 +"/dp"+season2+"/"+ccd2+"/diff" +  objid2 + ".gif";
+            imgs2.src = expnum2 +"/dp"+season2+"/"+ccd2+"/srch" + objid2 + ".gif";
+            imgt2.src = expnum2 +"/dp"+season2+"/"+ccd2+"/temp" + objid2 + ".gif";
+            imgd3.src = expnum3 +"/dp"+season3+"/"+ccd3+"/diff" +  objid3 + ".gif";
+            imgs3.src = expnum3 +"/dp"+season3+"/"+ccd3+"/srch" + objid3 + ".gif";
+            imgt3.src = expnum3 +"/dp"+season3+"/"+ccd3+"/temp" + objid3 + ".gif";
+
             document.body.appendChild(imgd1);
             document.body.appendChild(imgs1);
             document.body.appendChild(imgt1);
@@ -155,23 +193,31 @@
             document.body.appendChild(imgt3);
         }
 
+        //taking in user's opinion about how to evaluate the displayed triplet
         function ToggleEvaluation(){
             eva = 1-eva;
         }
 
+        //update the evaluation tag displayed
         function UpdateEvaluation(){
             var  x = document.getElementById("Mark");
+            var y = document.getElementById("ExpCcd");
             if (eva == 0){
-                x.innerHTML = "Marked as Noise";
+                x.innerHTML = " Marked as Noise";
                 x.style.color = "#82101C";
+                y.innerHTML = "(EXPNUM " + expnum_g +" CCD "+ ccd_g + ")";
+                y.style.color = "#82101C";
                 eva = 0;
             }else{
                 x.innerHTML = "Marked as Good";
                 x.style.color = "#3498DB";
+                y.innerHTML = "(EXPNUM " + expnum_g +" CCD "+ ccd_g + ")";
+                y.style.color = "#3498DB";
                 eva = 1;
             }
-            table.rows[rowNum].cells.item(3).innerHTML = eva;
+            table.rows[rowNum].cells.item(12).innerHTML = eva;
         }
+
 </script>
 <script>
         var b1 = document.getElementById("previousButton");

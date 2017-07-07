@@ -1,0 +1,23 @@
+*****************************************************************
+********************TNO Stamp Viewer***********************
+
+Introduction:
+-----------------
+The TNO Stamp Viewer is a web app for visually inspecting and evaluating TNO triplets. It displays 9 images at a time, each row has the source, template and difference images for one object in the triplet. 
+If the object is visible in the src and diff images but NOT the template image, it is a good sign that the object is a real TNO detection (not a noise misclassified by image processing machine learning), and a triplet with all three objects true should be considered a good triplet, otherwise a noise. 
+After the user has uploaded the csv file containing the object information, the stamp viewer will pull out the corresponding images and display, and allow user to evaluate each triplet as "good" or "noise". The Web app will record the user's evaluation and also the evaluation progress in the html table, which could be downloaded by clicking on "download as csv".
+During display and evaluation, the stamp viewer would also display the current evaluation of the displayed triplet and the exposure number, ccd number of the first object in the triplet.
+
+Prerequisite:
+-----------------
+The Web app is not hosted by a server accessible from outside due to the massive image dataset it need to access for displaying. It is designed to be placed at the upper level of the dataset, with folder organization such that it access the image by a path "exposure_number/'dp'+season_number/ccd_number/object_id+'.gif' ".
+The stamp viewer used the ecellentexport package to export csv file (credit to Jordi Burgos url: https://github.com/jmaister/excellentexport) so be sure to include excellentexport.js and excellentexport.min.js on the same level of directory as this web app's html file.
+
+Instruction:
+---------------
+(Same content, also see on web app)
+1. Upload a cvs file, each row formatted as "objid1 expnum1 season1 ccd1 objid2 expnum2 season2 ccd2 objid3 expnum3 season3 ccd3"
+2. For each display, if the triplet is shown to be problematic, mark as noise(if not marked, the triplet would be marked as good)
+3. Click through all triplets in the csv file by clicking "Next" 
+4. When the webpage alert that you have reached the end of the cvs file, save the result of evluation by clicking "Export Result to CSV", the CSV file would have in every row all the passed in information and a 13th column of 1 or 0, with 1 meaning good and 0 meaning noise. The 14th column shows 1 if the triplet has been evaluated in the web app, 0 otherwise. The last column(14th) is for keeping track of progress in case user need to exit before finishing all the evaluation.
+5. You could upload multiple csv files and export result in one csv after finishing evaluation of all of them
