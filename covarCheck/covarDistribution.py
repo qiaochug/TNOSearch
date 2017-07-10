@@ -5,6 +5,8 @@ import numpy as np
 import argparse
 import pickle
 from LinkerLib import Triplet
+from LinkerLib import Fake
+from LinkerLib import Detection
 import matplotlib.pyplot as plt
 
 #checks the r coefficients of a 6x6 matrix
@@ -48,15 +50,38 @@ def main():
         for i in np.arange(0,15):
             y_axes[i][y] = rceofs[ind1[i]][ind2[i]]
 
-    #setup for scatter plot
-    colors = (0,0,0)
+    #setup for scatter plot, negative are red, positive are black
+    colorp = "black"
+    colorn = "red"
     area = np.pi*2
+    x_axisp = []
+    y_axesp = []
     for i in np.arange(0,15):
-        plt.scatter(x_axis, y_axes[i],s=area,c=colors,alpha=0.5)
+        y_axesp.append([])
+    x_axisn = []
+    y_axesn = []
+    for i in np.arange(0,15):
+        y_axesn.append([])
+    
+    for y in range(len(triplets)):
+        #if the semi-major axis is negative, but not extreme
+        if x_axis[y] < 0 and x_axis[y] > -4000:
+            x_axisn.append(x_axis[y])
+            for i in np.arange(0,15):
+                y_axesn[i].append(y_axes[i][y])
+        if x_axis[y] > 0:
+            x_axisp.append(x_axis[y])
+            for i in np.arange(0,15):
+                y_axesp[i].append(y_axes[i][y])
+            
+    for i in np.arange(0,15):
+        plt.scatter(np.array(x_axisp), np.array(y_axesp[i]),s=area,c=colorp,alpha=0.5)
+        plt.scatter(np.array(x_axisn), np.array(y_axesn[i]),s=area,c=colorn,alpha=0.5)
         plt.title(savename + '_R' + str(ind1[i]) + str(ind2[i]))
         plt.xlabel('semi-major axis')
         plt.ylabel('r')
         plt.savefig(savename + '_R' + str(ind1[i]) + str(ind2[i]) + '.png')
+        plt.close()
             
 
 if __name__=='__main__':
