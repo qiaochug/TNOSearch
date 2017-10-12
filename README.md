@@ -12,13 +12,11 @@
 ### trajectory simulation
 - __trajectory described in angles__: [position.py](position.py)
 - __animation of trajectory__: [Asteroid_animated.py](Asteroid_animated.py)
-- __generated demos__: [newphiAtane0.4.mp4](newphiAtane0.4.mp4)
-                       [Observe_from_north_pole,facing_righthand,looking_up,x =y,y=x,e=0.4.mp4](Observe_from_north_pole\,facing_righthand\,looking_up\,x =y\,y=x\,e=0.4.mp4)
-                       [obesrving_from_equator,x=y,y=z,e=0,i= 0.4.mp4](obesrving_from_equator,x=y,y=z,e=0,i= 0.4.mp4)
+- __generated demos__: [newphiAtane0.4.mp4](newphiAtane0.4.mp4), [ObesrvingFromEquator0e0.4i.mp4](ObesrvingFromEquator0e0.4i.mp4), [ObserveFromNorthPoleFacingRighthandLookingUp0.4e.mp4](ObserveFromNorthPoleFacingRighthandLookingUp0.4e.mp4)
                    
 ### position prediction
 - __prediction with known perilelion__: [predict_by_perilelion.py](predict_by_perilelion.py)
-- __prediction based on earth's orbit motion__: [GammaTPlotwStatTNO.py](GammaTPlotwStatTNO.py) [GammaTPlotwStatTNOExFaster.py](GammaTPlotwStatTNOExFaster.py)
+- __prediction based on earth's orbit motion__: [GammaTPlotwStatTNO.py](GammaTPlotwStatTNO.py), [GammaTPlotwStatTNOExFaster.py](GammaTPlotwStatTNOExFaster.py)
 - __prediction optimization using inclination__: [InclinationFromTwoObs.py](InclinationFromTwoObs.py)
 - __prediction optimization using speed__: [fakeSpeed](speedChange/fakeSpeed)
 - __generated demos__: [GammaAgnTEx1--gammaBeta.mp4](GammaAgnTEx1--gammaBeta.mp4), [GammaAgnTEx2--lambdaBeta.mp4](GammaAgnTEx2--lambdaBeta.mp4)
