@@ -2,7 +2,7 @@
   Welcome to the Planet Nine research repository! The search uses data from the [Dark Energy Survey](https://www.darkenergysurvey.org/) and focuses on transneptunian objects that are ~200AU from earth. Here is some of the code I wrote for the project during summer 2017.
   
 ## Projects
-- trjectory simulation
+- trajectory simulation
 - position prediction
 - candidate evaluation website
 - merge triplets algorithm
